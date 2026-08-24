@@ -6,9 +6,42 @@ const { db, init } = require("./db");
 
 const app = express();
 app.use(express.json());
+const nodemailer = require("nodemailer");
 
 const PORT = process.env.PORT || 3000;
 const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || "";
+
+// --- Notification par mail à la première ouverture ---
+const GMAIL_USER = process.env.GMAIL_USER || "";
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || "";
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || GMAIL_USER;
+
+let mailer = null;
+if (GMAIL_USER && GMAIL_APP_PASSWORD) {
+  mailer = nodemailer.createTransport({
+    service: "gmail",
+    auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+  });
+} else {
+  console.log(
+    "Notifications par mail désactivées (GMAIL_USER / GMAIL_APP_PASSWORD non configurés)."
+    );
+}
+
+async function sendOpenNotification(email) {
+  if (!mailer) return;
+  try {
+    await mailer.sendMail({
+      from: `MailTrack <${GMAIL_USER}>`,
+      to: NOTIFY_EMAIL,
+      subject: `Mail ouvert : ${email.label}`,
+      text: `Ton mail "${email.label}"${email.recipient ? ` (envoyé à ${email.recipient})` : ""} vient d'être ouvert pour la première fois.`,
+    });
+    console.log(`Notification envoyée pour l'ouverture de "${email.label}".`);
+  } catch (err) {
+    console.error("Erreur lors de l'envoi de la notification:", err);
+  }
+}
 
 // Pixel PNG transparent 1x1, servi tel quel en binaire.
 const TRANSPARENT_PIXEL = Buffer.from(
@@ -40,16 +73,26 @@ app.get("/pixel/:id.png", async (req, res) => {
   // Log l'ouverture de façon asynchrone, sans bloquer la réponse image.
   try {
     const exists = await db.execute({
-      sql: "SELECT id FROM emails WHERE id = ?",
+      sql: "SELECT id, label, recipient FROM emails WHERE id = ?",
       args: [id],
     });
     if (exists.rows.length > 0) {
+      const email = exists.rows[0];
       const ua = req.get("user-agent") || "";
       const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").toString();
       await db.execute({
         sql: "INSERT INTO opens (email_id, opened_at, user_agent, ip) VALUES (?, ?, ?, ?)",
         args: [id, new Date().toISOString(), ua, ip],
       });
+
+      const countRes = await db.execute({
+        sql: "SELECT COUNT(*) as c FROM opens WHERE email_id = ?",
+        args: [id],
+      });
+      const openCount = Number(countRes.rows[0]?.c || 0);
+      if (openCount === 1) {
+        sendOpenNotification(email);
+      }
     }
   } catch (err) {
     console.error("Erreur lors de l'enregistrement de l'ouverture:", err);
