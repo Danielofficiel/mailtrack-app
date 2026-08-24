@@ -110,6 +110,24 @@ propose des plans payants sans mise en veille.
 8. Reviens sur ton dashboard : dès que le destinataire ouvre le mail, le statut
    passera à "Ouvert" avec l'heure exacte.
 
+## 4. Recevoir une notification par mail dès qu'un mail est ouvert
+
+L'app peut t'envoyer un mail automatiquement dès qu'un de tes mails suivis est ouvert pour la première fois (pas à chaque ouverture, pour éviter le spam dû au cache d'images de Gmail).
+
+**Étape 1.** Va sur [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) (nécessite que la validation en 2 étapes soit activée sur ton compte Google).
+
+**Étape 2.** Crée un "mot de passe d'application" (choisis un nom, ex. "MailTrack"), puis copie le mot de passe généré (16 caractères).
+
+**Étape 3.** Ajoute ces variables d'environnement à ton hébergement :
+
+`GMAIL_USER` = ton adresse Gmail. `GMAIL_APP_PASSWORD` = le mot de passe d'application généré à l'étape 2. `NOTIFY_EMAIL` (optionnel) = l'adresse qui doit recevoir les notifications, si différente de `GMAIL_USER`.
+
+Sur Render : va dans **Environment**, ajoute les variables, puis **Save, rebuild, and deploy**. En local / sur ton Mac : ajoute-les à ton fichier `.env`.
+
+**Étape 4.** C'est tout ! Dès qu'un mail suivi est ouvert pour la première fois, tu reçois un mail "📬 Mail ouvert : ...".
+
+⚠️ Le mot de passe d'application n'est **pas** ton mot de passe Gmail normal — ne le partage avec personne, et ne le mets jamais dans le code ou sur GitHub.
+
 ## Structure du projet
 
 ```
