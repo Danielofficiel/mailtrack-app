@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MailTrack maison</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="login-screen" class="screen hidden">
+    <div class="card login-card">
+      <h1>🔒 MailTrack maison</h1>
+      <p class="muted">Entre le mot de passe du dashboard pour continuer.</p>
+      <input id="login-password" type="password" placeholder="Mot de passe" />
+      <button id="login-btn" class="btn primary">Se connecter</button>
+      <p id="login-error" class="error hidden"></p>
+    </div>
+  </div>
+
+  <div id="app-screen" class="screen hidden">
+    <header>
+      <h1>📬 MailTrack maison</h1>
+      <p class="muted">Suis l'ouverture de tes mails, comme Mailtrack.</p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Nouveau mail à suivre</h2>
+        <form id="new-email-form">
+          <label>
+            Sujet / libellé
+            <input id="label" type="text" placeholder="Ex: Relance facture #1926669" required />
+          </label>
+          <label>
+            Destinataire (optionnel)
+            <input id="recipient" type="email" placeholder="ex@destinataire.com" />
+          </label>
+          <button type="submit" class="btn primary">Générer le pixel de suivi</button>
+        </form>
+
+        <div id="new-pixel-result" class="hidden pixel-result">
+          <p class="muted">Copie cette URL, puis dans Gmail : <strong>Insérer une photo → Adresse web (URL)</strong>, colle-la, et envoie ton mail.</p>
+          <div class="copy-row">
+            <input id="pixel-url" type="text" readonly />
+            <button id="copy-pixel-btn" class="btn">Copier</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <h2>Mails suivis</h2>
+          <button id="refresh-btn" class="btn">↻ Actualiser</button>
+        </div>
+        <div id="emails-list"></div>
+      </section>
+    </main>
+
+    <div id="detail-modal" class="modal hidden">
+      <div class="modal-content card">
+        <button id="close-modal-btn" class="btn close-btn">✕</button>
+        <h2 id="detail-label"></h2>
+        <p id="detail-meta" class="muted"></p>
+        <div class="copy-row">
+          <input id="detail-pixel-url" type="text" readonly />
+          <button id="detail-copy-btn" class="btn">Copier l'URL</button>
+        </div>
+        <h3>Historique des ouvertures</h3>
+        <div id="detail-opens"></div>
+        <button id="delete-email-btn" class="btn danger">Supprimer ce suivi</button>
+      </div>
+    </div>
+
+    <footer>
+      <p class="muted small">
+        ⚠️ Limite connue : Gmail met en cache les images côté serveur, donc plusieurs ouvertures
+        rapprochées par le même destinataire peuvent ne compter qu'une fois. Le suivi ne fonctionne
+        que si les images sont chargées automatiquement (ou si le destinataire clique sur "Afficher les images").
+      </p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
