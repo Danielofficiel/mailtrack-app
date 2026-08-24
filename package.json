@@ -17,6 +17,7 @@
     "@libsql/client": "^0.17.4",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "nodemailer": "^7.0.13",
     "uuid": "^14.0.2"
   }
 }
