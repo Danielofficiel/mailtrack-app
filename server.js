@@ -6,44 +6,32 @@ const { db, init } = require("./db");
 
 const app = express();
 app.use(express.json());
-const nodemailer = require("nodemailer");
+// --- Notification push (ntfy.sh) à la première ouverture, sans SMTP ---
+const NTFY_TOPIC = process.env.NTFY_TOPIC || "";
 
 const PORT = process.env.PORT || 3000;
 const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || "";
 
-// --- Notification par mail à la première ouverture ---
-const GMAIL_USER = process.env.GMAIL_USER || "";
-const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || "";
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || GMAIL_USER;
-
-let mailer = null;
-if (GMAIL_USER && GMAIL_APP_PASSWORD) {
-  mailer = nodemailer.createTransport({
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          requireTLS: true,
-          auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
-  });
-} else {
-  console.log(
-    "Notifications par mail désactivées (GMAIL_USER / GMAIL_APP_PASSWORD non configurés)."
-    );
+if (!NTFY_TOPIC) {
+    console.log("Notifications désactivées (NTFY_TOPIC non configuré).");
 }
 
 async function sendOpenNotification(email) {
-  if (!mailer) return;
-  try {
-    await mailer.sendMail({
-      from: `MailTrack <${GMAIL_USER}>`,
-      to: NOTIFY_EMAIL,
-      subject: `Mail ouvert : ${email.label}`,
-      text: `Ton mail "${email.label}"${email.recipient ? ` (envoyé à ${email.recipient})` : ""} vient d'être ouvert pour la première fois.`,
-    });
-    console.log(`Notification envoyée pour l'ouverture de "${email.label}".`);
-  } catch (err) {
-    console.error("Erreur lors de l'envoi de la notification:", err);
-  }
+    if (!NTFY_TOPIC) return;
+    try {
+          const res = await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+                  method: "POST",
+                  headers: { Title: `Mail ouvert : ${email.label}` },
+                  body: `Ton mail "${email.label}"${email.recipient ? ` (envoyé à ${email.recipient})` : ""} vient d'être ouvert pour la première fois.`,
+          });
+          if (!res.ok) {
+                  console.error(`Erreur ntfy.sh (${res.status}):`, await res.text());
+          } else {
+                  console.log(`Notification envoyée pour l'ouverture de "${email.label}".`);
+          }
+    } catch (err) {
+          console.error("Erreur lors de l'envoi de la notification:", err);
+    }
 }
 
 // Pixel PNG transparent 1x1, servi tel quel en binaire.
