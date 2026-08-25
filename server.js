@@ -19,8 +19,11 @@ const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || GMAIL_USER;
 let mailer = null;
 if (GMAIL_USER && GMAIL_APP_PASSWORD) {
   mailer = nodemailer.createTransport({
-    service: "gmail",
-    auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          requireTLS: true,
+          auth: { user: GMAIL_USER, pass: GMAIL_APP_PASSWORD },
   });
 } else {
   console.log(
